@@ -1,0 +1,10 @@
+{
+ "task":"normal_copy" , 
+ "deploy_host":"",
+ "deploy_timeout":30, 
+ "remote_user":"" ,
+ "remote_pass":"" ,
+ "procs":[
+   {"name":"copy1" , "bin":["./tools/*"] , "host":"" , "host_dir":"/home/leiming/normal_copy/" , "copy_cfg":0}
+  ] 
+}
