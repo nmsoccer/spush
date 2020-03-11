@@ -1,2 +1,2 @@
 # spush
-a simple dispatch files tool
+一款简单的文件分发工具.主要用于将不同的文件分发到不同的机器及目录
