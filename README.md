@@ -21,7 +21,7 @@ A simple push tool,一款简单的分发工具.该工具主要目标是将不同
    * go build spush.go
    * ./spush xxxx 即可使用
 
-### 命令
+### 命令选项
   * `-C`: 仅仅为分发任务生成各分发任务自有的配置文件(如果有设置)
   * `-P`: 推送并执行配置里所有定义的分发任务。这里会先执行-C选项的内容
   * `-p xxx`: 根据任务名选择执行配置里某些分发任务
@@ -88,7 +88,7 @@ A simple push tool,一款简单的分发工具.该工具主要目标是将不同
   [cpy1]::success 
   [cpy2]::success
   ```
-  推送成功，这里可以显示两项任务都OK鸟。我们可以去看一看目标的目录是否O杰把K
+  推送成功，这里可以显示两项任务都OK鸟。我们可以去看一看目标的目录是否欧杰把客
   ```
   tree /home/nmsoccer/spush_demo/
   /home/nmsoccer/spush_demo/
@@ -106,47 +106,6 @@ A simple push tool,一款简单的分发工具.该工具主要目标是将不同
   ```
   看了下都是OK的了,当然这里已经把痕迹都删除了，如果想要查看部署后的遗留可以加上-r选项
   
-  * 保存现场：
-  ```
-  ./spush -r -P -f ./simple_copy.json 
-  spush starts...
-  push all procs
-  .
-  ----------Push <simple_copy> Result---------- 
-  ok
-  [cpy1]::success 
-  [cpy2]::success 
-  
-  ```
-    部署如下：
-  ```
-  tree /home/leiming/spush_demo/
-  /home/leiming/spush_demo/
-  `-- simple_copy
-      |-- cpy1
-      |   |-- cpy1.tar.gz
-      |   |-- cpy1.tar.gz.md5
-      |   |-- init.sh
-      |   |-- spush_simple_copy_tools
-      |   |   |-- peer_exe.sh
-      |   |   |-- report
-      |   |   `-- report.c
-      |   `-- tools
-      |       |-- exe_cmd.exp
-      |       |-- peer_exe.sh
-      |       |-- push.sh
-      |       |-- report.c
-      |       `-- scp.exp
-      `-- cpy2
-          |-- cpy2.tar.gz
-          |-- cpy2.tar.gz.md5
-          |-- passwd
-          `-- spush_simple_copy_tools
-              |-- peer_exe.sh
-              |-- report
-              `-- report.c
-  ```
-  我们可以看到部署目录遗留了spush_$task_tools的遗留目录
   
  * 查看日志 可以在/tmp/spush/$task/$proc/log里检查到在部署机器上执行的情况 如下：
    ```
@@ -158,4 +117,17 @@ A simple push tool,一款简单的分发工具.该工具主要目标是将不同
        `-- cpy2
            `-- log
    ```
-   都是这样的层次
+   都是这样的层次。查看一下内容
+  ```
+  cat /tmp/spush/simple_copy/cpy1/log
+  -----------------------------
+   >>running on 2020-03-12 20:21:35
+  ./peer_exe.sh l cpy1 127.0.0.1 32808 y [:] simple_copy 
+  check md5 success
+  try to run ./report
+  try to send msg to 127.0.0.1:32808 proc:cpy1 stat:1 info:
+  msg is:{"msg_type":1,"msg_proc":"cpy1","msg_result":1,"msg_info":""}
+  [good night]
+  report finish!
+  deploy finish
+  ```
