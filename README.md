@@ -1,5 +1,5 @@
 # SPush
-A simple push tool,一款简单的分发工具.主要功能是将不同的文件分发到不同的机器及对应的目录。 
+A simple push tool,一款简单的分发工具.该工具主要目标是将不同的文件或目录分发到不同的机器及对应的目录。 
 
 ### 主要特点
 * **多重分发**： 支持一次分发多个任务到多台机器及目录  
@@ -7,8 +7,8 @@ A simple push tool,一款简单的分发工具.主要功能是将不同的文件
 * **较少依赖**： 尽量减少对环境的特殊依赖，除了运行分发机器需要部署go环境以外，目标机器只需要普通的unix/linux开发环境即可
 * **结果反馈**： 为了保证分发的正确性，所有的分发任务均有分发结果反馈告知是否成功或发生错误
 * **配置生成**： 在较大型的比如游戏项目中需要为不同进程编写对应的配置文件，这里支持根据模板通过进程名自动生成相关的配置文件
-* **指令运行**： 为了方便一些部署工作，支持针对每个特定的分发过程在分发结束后执行简单的指令
-  想到了再写  
+* **指令运行**： 为了方便一些部署工作，支持针对每个特定的分发过程在分发结束后执行简单的指令  
+  _想到了再写_  
   
 ### 安装
  * 依赖
@@ -63,5 +63,99 @@ A simple push tool,一款简单的分发工具.主要功能是将不同的文件
   
 * 【proc_cfgs】: **可选**：对填写的每个分发任务生成对应配置文件，普通的拷贝工作可以不使用该选项
 
+### 基本演示 
+这里使用simple_copy来进行
 
+* 进入demo/simple_copy/目录 执行./init.sh进行初始化工作
+* 修改./simple_copy.json配置文件里的host_dir为本机的有效目录
+* 生成各任务配置：
+  ```
+  ./spush -C -f ./simple_copy.json 
+  spush starts...
+  create cfg...
+  nothing to do
+  ```
+  因为没有proc_cfgs进行配置文件的设置，所以这里仿佛什么都没有发生
 
+* 推送：
+  ```
+  ./spush -P -f ./simple_copy.json 
+  spush starts...
+  push all procs
+  .
+  ----------Push <simple_copy> Result---------- 
+  ok
+  [cpy1]::success 
+  [cpy2]::success
+  ```
+  推送成功，这里可以显示两项任务都OK鸟。我们可以去看一看目标的目录是否O杰把K
+  ```
+  tree /home/nmsoccer/spush_demo/
+  /home/nmsoccer/spush_demo/
+  `-- simple_copy
+      |-- cpy1
+      |   |-- init.sh
+      |   `-- tools
+      |       |-- exe_cmd.exp
+      |       |-- peer_exe.sh
+      |       |-- push.sh
+      |       |-- report.c
+      |       `-- scp.exp
+      `-- cpy2
+          `-- passwd
+  ```
+  看了下都是OK的了,当然这里已经把痕迹都删除了，如果想要查看部署后的遗留可以加上-r选项
+  
+  * 保存现场：
+  ```
+  ./spush -r -P -f ./simple_copy.json 
+  spush starts...
+  push all procs
+  .
+  ----------Push <simple_copy> Result---------- 
+  ok
+  [cpy1]::success 
+  [cpy2]::success 
+  
+  ```
+    部署如下：
+  ```
+  tree /home/leiming/spush_demo/
+  /home/leiming/spush_demo/
+  `-- simple_copy
+      |-- cpy1
+      |   |-- cpy1.tar.gz
+      |   |-- cpy1.tar.gz.md5
+      |   |-- init.sh
+      |   |-- spush_simple_copy_tools
+      |   |   |-- peer_exe.sh
+      |   |   |-- report
+      |   |   `-- report.c
+      |   `-- tools
+      |       |-- exe_cmd.exp
+      |       |-- peer_exe.sh
+      |       |-- push.sh
+      |       |-- report.c
+      |       `-- scp.exp
+      `-- cpy2
+          |-- cpy2.tar.gz
+          |-- cpy2.tar.gz.md5
+          |-- passwd
+          `-- spush_simple_copy_tools
+              |-- peer_exe.sh
+              |-- report
+              `-- report.c
+  ```
+  我们可以看到部署目录遗留了spush_$task_tools的遗留目录
+  
+ * 查看日志 可以在/tmp/spush/$task/$proc/log里检查到在部署机器上执行的情况 如下：
+   ```
+   tree /tmp/spush/
+   /tmp/spush/
+   `-- simple_copy
+       |-- cpy1
+       |   `-- log
+       `-- cpy2
+           `-- log
+   ```
+   都是这样的层次
