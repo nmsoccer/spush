@@ -1,18 +1,30 @@
 #!/bin/bash
-#<l/r> <proc_name> [center-ip] [center-port]
+#<l/r> <proc_name> <center-ip> <center-port> <foot> <cmd> <task_name>
 p_type=$1
 proc_name=$2
 center_ip=$3
 center_port=$4
+foot=$5
+cmd=$6
+task_name=$7
 ts=`date +"%F %T"`
 report_src="./report.c"
 report_bin="./report"
-log="./log"
+log_dir="/tmp/spush/$task_name/$proc_name"
+my_tool_dir="spush_${task_name}_tools"
+log="$log_dir/log"
+
+
+mkdir -p $log_dir
+if [[ ! -e $log_dir ]]
+then
+  echo "create $log_dir at $ts failed!" >> ../spush_fail
+fi
 
 echo -e "\n" >> $log
 echo "-----------------------------" >> $log
 echo ">>running on $ts" >> $log
-echo "$0 $p_type $proc_name $center_ip $center_port" >> $log
+echo "$0 $p_type $proc_name $center_ip $center_port $foot [$cmd] $task_name " >> $log
 
 function check_md5() 
 {
@@ -64,7 +76,7 @@ function clean_footprint()
   rm ./$proc_name.tar.gz.md5
 
   #clear dir
-  rm -rf ./spush_tools/
+  rm -rf ./${my_tool_dir}/
 }
 
 function main()
@@ -90,7 +102,12 @@ function main()
   report
   echo "deploy finish" >> $log
 
-  clean_footprint 
+  command $cmd
+
+  if [[ $foot != "y" ]]
+  then
+    clean_footprint 
+  fi
 }
 
 main

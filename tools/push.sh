@@ -1,5 +1,5 @@
 #!/bin/bash
-#./push.sh <task_name> <proc-name> <target-host> <target-dir> <my_ip> <my_port> [user] [pass] 
+#./push.sh <task_name> <proc-name> <target-host> <target-dir> <my_ip> <my_port> <user> <pass> <foot> <cmd>  
 task_name=$1
 proc_name=$2
 t_host=$3
@@ -8,16 +8,19 @@ m_ip=$5
 m_port=$6
 t_user=$7
 t_pass=$8
+t_foot=$9
+shift
+t_cmd=$9
 working_dir=`pwd`
-peer_dir="spush_tools"
+peer_dir="spush_${task_name}_tools"
 peer_exe="peer_exe.sh"
 report="report.c"
 
-echo ">>push $task_name $proc_name $t_host $t_dir $t_user *** <$m_ip:$m_port>"
+echo ">>push $task_name $proc_name $t_host $t_dir $t_user *** <$m_ip:$m_port> $t_foot [$t_cmd]"
 #exit 0
 function show_help()
 {
-  echo "usage $0 <task> <proc-name> <target-host> <target-dir> <my_ip> <my_port> [user] [pass]"
+  echo "usage $0 <task> <proc-name> <target-host> <target-dir> <my_ip> <my_port> [user] [pass] <foot> <cmd>"
 }
 #$1:tarfile $2 md5file 
 function local_dispatch()
@@ -48,7 +51,7 @@ function local_dispatch()
   #check md5
   cd $peer_dir/ 
   chmod u+x $peer_exe
-  ./$peer_exe "l" $proc_name "127.0.0.1" $m_port
+  ./$peer_exe "l" $proc_name "127.0.0.1" $m_port $t_foot "$t_cmd" $task_name
   
 
   cd $working_dir
@@ -67,7 +70,7 @@ function remote_dispatch()
   $working_dir/tools/scp.exp $t_host $t_user $t_pass $md5_file  $t_dir
  
   #unzip and exe peer
-  remote_cmd="cd $t_dir;tar -zxvf $tar_file;cd $peer_dir;chmod u+x ./$peer_exe;./$peer_exe r $proc_name $m_ip $m_port"
+  remote_cmd="cd $t_dir;tar -zxvf $tar_file;cd $peer_dir;chmod u+x ./$peer_exe;./$peer_exe r $proc_name $m_ip $m_port $t_foot \"$t_cmd\" $task_name"
   $working_dir/tools/exe_cmd.exp $t_host $t_user $t_pass "$remote_cmd" 
  
   echo "done"

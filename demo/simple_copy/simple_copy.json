@@ -1,0 +1,13 @@
+{
+ "task":"simple_copy" , 
+ "deploy_host":"",
+ "deploy_timeout":10, 
+ "remote_user":"" ,
+ "remote_pass":"" ,
+ "procs":[
+   {"name":"cpy1" , "bin":["./tools/" , "./init.sh"] , "host":"" , "host_dir":"/home/nmsoccer/spush_demo/simple_copy/" , "copy_cfg":0 , "cmd":""}
+  ] ,
+  
+  "proc_cfgs":[
+  ]
+}

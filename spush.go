@@ -14,6 +14,8 @@ import (
 	"time"
 	"os/exec"
 	"strconv"
+	"sync"
+	"path/filepath"
 )
 
 var DefaultPushTimeout int =30 //default 30s timeout
@@ -41,6 +43,7 @@ type Proc struct {
 	Host string 
 	HostDir string `json:"host_dir"`
 	CopyCfg int `json:"copy_cfg"`
+	Cmd string `json:"cmd"`
 }
 
 type ProcCfg struct {
@@ -85,9 +88,16 @@ type PushResult struct {
 	info string
 }
 
+type PushTotal struct {
+	complete int
+	push_map map[string]*PushResult
+}
+
 
 var conf Conf;
 var proc_map = make(map[string] *MProc);
+var push_total = PushTotal{complete:0};
+var push_lock sync.Mutex;
 
 func main() {
 	fmt.Println("spush starts...");
@@ -129,6 +139,7 @@ func main() {
 		return;
 	}
 	
+		//set default
 	if conf.DeployHost == "" {
 		conf.DeployHost = "127.0.0.1";
 	}
@@ -137,9 +148,18 @@ func main() {
 		conf.DeployTimeOut = DefaultPushTimeout; //default 60s
 	}
 	
+	if conf.DeployUser == "" {
+		conf.DeployUser = "#"; 
+	}
+	
+	if conf.DeployPass == "" {
+		conf.DeployPass = "#";
+	}
+	
+	
 			
 	//pp
-	if !*Verbose {			
+	if !*Verbose || *Verbose {			
 		go func() {
 			for {
 				fmt.Printf(".");
@@ -151,9 +171,40 @@ func main() {
 	//mproc
 	var mproc *MProc;
 	for _ , proc := range conf.Procs {
+			//convert bin file path to abs
+		if len(proc.Bin) > 0 {
+			for i , file_path := range proc.Bin {
+				abs_path , err := filepath.Abs(file_path);
+				if err != nil {
+					fmt.Printf("Convert %s to abs Path Failed! Please Check proc <%s>\n ", file_path , proc.Name);
+					return;
+				}
+				proc.Bin[i] = abs_path;
+			}
+		}
+		
+		if proc.HostDir == "" || len(proc.HostDir)<=0 {
+			fmt.Printf("proc.host_dir Not Set! Please Check proc <%s>\n", proc.Name);
+			return;
+		}
+			//convert to abs path
+		abs_host_dir , err := filepath.Abs(proc.HostDir);
+		if err != nil {
+			fmt.Printf("Convert Dir to abs Path Failed! Please Check proc <%s>\n ", proc.Name);
+			return;
+		}
+		proc.HostDir = abs_host_dir;
+		
+		
 		if proc.Host=="" || len(proc.Host)<=0 {	//default set local
 			proc.Host="127.0.0.1";
 		}
+		
+		if proc.Cmd=="" || len(proc.Cmd)<=0 {	//default cmd nop
+			proc.Cmd=":";	
+		}
+		
+		
 		mproc = new(MProc);
 		mproc.proc = proc;		
 		proc_map[proc.Name] = mproc;
@@ -187,8 +238,8 @@ func main() {
 		
 			//2. routine			
 		ch := make(chan string)
-		push_result := init_push_result(conf.Procs);		
-		go check_push_result(ch , push_result);
+		init_push_result(conf.Procs);		
+		go check_push_result(ch);
 		
 		timing_ch := time.Tick(time.Second * time.Duration(conf.DeployTimeOut)); //default 30s timeout
 					
@@ -206,7 +257,7 @@ func main() {
 		case push_result := <- ch:
 			fmt.Printf("\n----------Push <%s> Result---------- \n%s\n", conf.TaskName , push_result);	
 		}
-		print_push_result(push_result);
+		print_push_result();
 		break;
 	case *PushSome != "":
 		fmt.Printf("try to push some procs:%s\n", *PushSome);
@@ -286,7 +337,7 @@ func gen_pkg(pproc *Proc) int {
 	}
 	
 	//copy files	
-	cp_arg := []string{"-f"};
+	cp_arg := []string{"-Rf"};
 	cp_arg = append(cp_arg, pproc.Bin...);
 	if pproc.CopyCfg == 1 {		//copy cfg
 		cp_arg = append(cp_arg , proc_map[pproc.Name].cfg_file);
@@ -299,18 +350,35 @@ func gen_pkg(pproc *Proc) int {
 	cp_cmd.Stdout = &output_info;
 	err = cp_cmd.Run();
 	if err != nil {
-		fmt.Printf("exe cmd failed! err:%s cmd:%v\n", err , cp_cmd.Args);
+		fmt.Printf("cp failed! err:%s cmd:%v\n", err , cp_cmd.Args);
+		push_lock.Lock();
+		push_total.complete += 1;
+		push_lock.Unlock();
+		push_total.push_map[pproc.Name].status = PUSH_ERR;
+		push_total.push_map[pproc.Name].info = "copy failed:" + err.Error();
+		
 		return -1;
 	}
 	
 	//exe tool
+	var keep_footprint = "n";
+	if *RemainFootPrint {
+		keep_footprint = "y";
+	}
+	
 	push_cmd := exec.Command("./tools/push.sh", conf.TaskName , pproc.Name , pproc.Host , pproc.HostDir , conf.DeployHost , strconv.Itoa(ListenPort) , 
-		conf.DeployUser , conf.DeployPass);
+		conf.DeployUser , conf.DeployPass , keep_footprint , pproc.Cmd);
 	cmd_result := bytes.Buffer{};
 	push_cmd.Stdout = &cmd_result;
 	err = push_cmd.Run();
 	if err != nil {
-		fmt.Printf("exe cmd failed! err:%s cmd:%v\n", err , push_cmd.Args);
+		fmt.Printf("exe push failed! err:%s cmd:%v\n", err , push_cmd.Args);
+		push_lock.Lock();
+		push_total.complete += 1;
+		push_lock.Unlock();
+		push_total.push_map[pproc.Name].status = PUSH_ERR;
+		push_total.push_map[pproc.Name].info = "dispatch failed:" + err.Error();
+		v_print("complete:%d <%s>\n", push_total.complete , pproc.Name);		
 		return -1;
 	}
 	if *Verbose {
@@ -388,35 +456,51 @@ func create_cfg(pcfg *ProcCfg) int {
 	return 0;
 }
 
-func init_push_result(procs []*Proc) (map[string]*PushResult) {
-	push_map := make(map[string] *PushResult);
+func init_push_result(procs []*Proc)  {
+	//push_map := make(map[string] *PushResult);
+	push_total.push_map = make(map[string] *PushResult);
+	push_total.complete = 0;
 	
 	for _ , pproc := range procs {
-		push_map[pproc.Name] = &PushResult{status:PUSH_ING , info:"dipatching" , proc:pproc};
+		push_total.push_map[pproc.Name] = &PushResult{status:PUSH_ING , info:"dipatching" , proc:pproc};
 	}
-	return push_map;
 }
 
-func print_push_result(check_map map[string]*PushResult) {
+func print_push_result() {
+	check_map := push_total.push_map;
 	code_converse := map[int]string {PUSH_ING:"timeout" , PUSH_SUCCESS:"success" , PUSH_ERR:"err"};
+	push_lock.Lock();
 	for proc_name , presult := range check_map {
 		fmt.Printf("[%s]::%s %s\n", proc_name , code_converse[presult.status] , presult.info);
 	}
+	push_lock.Unlock();
 }
 
-func check_push_result(c chan string , check_map map[string]*PushResult) {
-	complete := 0;
+func check_push_result(c chan string) {
+	check_map := push_total.push_map;	
 	result := "ok";
 	var conn *net.UDPConn;
 	
 	//construct check map
 	v_print("map len:%d and map:%v\n", len(check_map) , check_map);
+	
+	//check complete
+	go func(){	//这里启动一个routine 来检查complete的情况
+		for {	
+			if push_total.complete >= len(push_total.push_map) {	
+				v_print("push from check-routine complete!\n");
+				c <- "";
+				break;
+			}
+			time.Sleep(1e9) //1s
+		}
+	}();
 		
 	//resolve addr
 	my_addr , err := net.ResolveUDPAddr(TransProto, ListenAddr);
 	if err != nil {
 		fmt.Printf("resolve  %s failed! we may not recv push results! err:%s", ListenAddr , err);
-		result = "fail";
+		result = "create listener failed by addr fault";
 		goto _end;
 	}
 	
@@ -424,14 +508,14 @@ func check_push_result(c chan string , check_map map[string]*PushResult) {
 	conn , err = net.ListenUDP(TransProto, my_addr);
 	if err != nil {
 		fmt.Printf("listen  %s failed! we may not recv push results! err:%s", ListenAddr , err);
-		result = "fail";
+		result = "create listener failed by listen fault ";
 		goto _end;
 	}
 	
 	//handle
 	for {
 		//check complete
-		if complete == len(check_map) {
+		if push_total.complete >= len(check_map) {
 			result = "ok";
 			break;
 		}
@@ -468,15 +552,18 @@ func check_push_result(c chan string , check_map map[string]*PushResult) {
 			continue;
 		}
 		
+		//response
+		conn.WriteTo([]byte("good night"), peer_addr);	
+		
 		//set status
 		if check_map[msg.Mproc].status == PUSH_ING {
+			push_lock.Lock();
 			check_map[msg.Mproc].status = msg.Mresult;
 			check_map[msg.Mproc].info = msg.Minfo;
-			complete += 1;
+			push_total.complete += 1;
+			push_lock.Unlock();
 		}
-		
-		//response
-		conn.WriteTo([]byte("good night"), peer_addr);		
+				
 	}
 	
 	
