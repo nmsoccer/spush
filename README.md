@@ -1,5 +1,5 @@
 # SPush
-A simple push tool,一款简单的分发工具.该工具主要目标是将不同的文件或目录分发到不同的机器及对应的目录。 
+A Simple Push tool,一款简单的分发工具.主要目的是将不同的文件或目录分发到不同的机器。 
 
 ### 主要特点
 * **多重分发**： 支持一次分发多个任务到多台机器及目录  
@@ -7,7 +7,7 @@ A simple push tool,一款简单的分发工具.该工具主要目标是将不同
 * **较少依赖**： 尽量减少对环境的特殊依赖，除了运行分发机器需要部署go环境以外，目标机器只需要普通的unix/linux开发环境即可
 * **结果反馈**： 为了保证分发的正确性，所有的分发任务均有分发结果反馈告知是否成功或发生错误
 * **配置生成**： 在较大型的比如游戏项目中需要为不同进程编写对应的配置文件，这里支持根据模板通过进程名自动生成相关的配置文件
-* **指令运行**： 为了方便一些部署工作，支持针对每个特定的分发过程在分发结束后执行简单的指令  
+* **指令执行**： 为了方便一些部署工作，支持针对每个特定的分发过程在分发结束后执行简单的指令  
   _想到了再写_  
   
 ### 安装
@@ -39,8 +39,8 @@ A simple push tool,一款简单的分发工具.该工具主要目标是将不同
  "remote_user":"" ,
  "remote_pass":"" ,
  "procs":[
-   {"name":"cpy1" , "bin":["./tools/" , "./init.sh"] , "host":"" , "host_dir":"/home/nmsoccer/spush_demo/simple_copy/cpy1" , "copy_cfg":0 , "cmd":""} , 
-   {"name":"cpy2" , "bin":["/etc/passwd"] , "host":"127.0.0.1" , "host_dir":"/home/nmsoccer/spush_demo/simple_copy/cpy2" , "copy_cfg":0 , "cmd":""} 
+   {"name":"cpy1" , "bin":["/etc/profile.d/" , "./init.sh"] , "host":"" , "host_dir":"/home/nmsoccer/spush_demo/simple_copy/cpy1" , "copy_cfg":0 , "cmd":""} , 
+   {"name":"cpy2" , "bin":["/etc/passwd" , "./count.sh"] , "host":"127.0.0.1" , "host_dir":"/home/nmsoccer/spush_demo/simple_copy/cpy2" , "copy_cfg":0 , "cmd":"./count.sh cs suomei"} 
   ] ,
   
   "proc_cfgs":[
@@ -60,7 +60,7 @@ A simple push tool,一款简单的分发工具.该工具主要目标是将不同
   * 【host】: **可选**：目标主机的IP地址，如果本机部署则可以不填或者为127.0.0.1 
   * 【host_dir】:**必须**：部署到目标机器上的目录，需要填写绝对路径
   * 【copy_cfg】: **可选**：是否需要拷贝由下面proc_cfg里生成的配置文件，0：不拷贝;1:拷贝。如果proc_cfg里没有填写也不会拷贝到 
-  * 【cmd】: **可选**：在该分发任务部署成功之后可以选择执行的命令。注意该命令的执行目录是在host_dir的下一层目录。比如设置../xx.sh则会执行到host_dir/xx.sh。
+  * 【cmd】: **可选**：在该分发任务部署成功之后可以选择执行的命令。注意该命令的执行目录是在host_dir目录。比如设置./xx.sh则执行的是host_dir/xx.sh
   
 * 【proc_cfgs】: **可选**：对填写的每个分发任务生成对应配置文件，普通的拷贝工作可以不使用该选项
 
@@ -93,19 +93,60 @@ A simple push tool,一款简单的分发工具.该工具主要目标是将不同
   ```
   tree /home/nmsoccer/spush_demo/
   /home/nmsoccer/spush_demo/
+  spush_demo/
   `-- simple_copy
       |-- cpy1
       |   |-- init.sh
-      |   `-- tools
-      |       |-- exe_cmd.exp
-      |       |-- peer_exe.sh
-      |       |-- push.sh
-      |       |-- report.c
-      |       `-- scp.exp
+      |   `-- profile.d
+      |       |-- 256term.csh
+      |       |-- 256term.sh
+      |       |-- abrt-console-notification.sh
+      |       |-- bash_completion.sh
+      |       |-- colorgrep.csh
+      |       |-- colorgrep.sh
+      |       |-- colorls.csh
+      |       |-- colorls.sh
+      |       |-- csh.local
+      |       |-- lang.csh
+      |       |-- lang.sh
+      |       |-- less.csh
+      |       |-- less.sh
+      |       |-- sh.local
+      |       |-- vim.csh
+      |       |-- vim.sh
+      |       |-- which2.csh
+      |       `-- which2.sh
       `-- cpy2
+          |-- count.info
+          |-- count.sh
           `-- passwd
+    ```
+  看了下都是OK的了,当然这里已经把痕迹都删除了，如果想要查看部署后的遗留可以加上-r选项。其中cpy2的分发在分发成功之后执行了./count.sh cs suomei，我们可以检查一下count.sh脚本
   ```
-  看了下都是OK的了,当然这里已经把痕迹都删除了，如果想要查看部署后的遗留可以加上-r选项
+  cat count.sh
+  #!/bin/bash
+  log="./count.info"
+  ts=`date +"%F %T"`
+  echo $ts >> $log
+  echo "$1 add $2" >> $log 
+  count=1
+  while [[ $count -le 20 ]]
+  do
+    echo "it is :${count}"  >> $log  
+    let count=count+1
+    sleep 1
+  done
+  ```
+  会在当前目录打印20个数字写入count.info。我们可以看到count.info的存在，并且执行成功：
+  ```
+  2020-03-12 20:21:35
+  cs add suomei
+  it is :1
+  it is :2
+  it is :3
+  it is :4
+  ...
+  ```
   
   
  * 查看日志 可以在/tmp/spush/$task/$proc/log里检查到在部署机器上执行的情况 如下：
@@ -132,7 +173,7 @@ A simple push tool,一款简单的分发工具.该工具主要目标是将不同
   report finish!
   deploy finish
   ```
-
+  
 ### 进阶配置
   在比如游戏项目中，经常会部署多个进程，每种不同的进程会拥有不同的配置文件；同时每种进程可能产生多个实例，每个实例拥有大部分相同的配置，只有部分参数彼此不同。为了解决这种情况，该工具也支持为每一个在文件里设置了的进程生成各自对应的配置文件。配置文件由模板+参数共同构成，模板是同类进程共有的静态数据；参数用于填充模板内的占位符。参考下面一个例子：
   ```
@@ -165,7 +206,7 @@ A simple push tool,一款简单的分发工具.该工具主要目标是将不同
    
   }
   ```
-上面是一个简单的游戏配置，一共三类进程，conn_serv,logic_serv,db_serv。conn_serv和logic_serv形成一组，共两组，一组部署到分发机本机，一组部署到内网另一台机器10.161.37.104上；db_serv部署到内网第三台机器10.144.172.215上，并且预计部署三个实例. 同时在部署成功之后分别在部署目录执行对应的文件。  
+上面是一个简单的游戏配置，一共三类进程，conn_serv,logic_serv,db_serv，分别简单代表游戏的接入层逻辑层和数据层进程。conn_serv和logic_serv组成一组，一共两组。一组部署到分发机本机，一组部署到内网另一台机器10.161.37.104上；db_serv部署到内网第三台机器10.144.172.215上，并且预计部署三个实例. 最后，在部署成功之后分别在执行相应应的文件。    
 procs选项在上面已经说过了，这里重点介绍proc_cfgs选项：
   * 【name】: **必须**：这里的名字与procs项目填写的name必须对应保持一致，用于标明是哪个进程或者分发的配置文件  
   * 【cfg_name】：**必须**：该进程或者分发生成的独有配置文件名。注意不用添加路径，最终生成的配置文件会在proc.host_dir目录下  
@@ -275,7 +316,7 @@ procs选项在上面已经说过了，这里重点介绍proc_cfgs选项：
         |-- logic_serv
         `-- logic_serv.cfg
     ```
-    因为我们在设置里面有部署后执行对应的脚本文件比如`{"name":"conn_serv-1" , "bin":["./bin/conn_serv/conn_serv"] , "host":"127.0.0.1" , "host_dir":"/home/nmsoccer/sg/conn_serv" , "copy_cfg":1 , "cmd":"./conn_serv -D"},` 而conn_serv是一个简单的脚本文件
+    因为我们在设置里面有部署后执行对应的脚本文件比如`{"name":"conn_serv-1" , "bin":["./bin/conn_serv/conn_serv"] , "host":"127.0.0.1" , "host_dir":"/home/nmsoccer/sg/conn_serv" , "copy_cfg":1 , "cmd":"./conn_serv -D"},` 会执行./conn_serv -D,而conn_serv是一个简单的脚本文件
     ```
     cat /home/nmsoccer/sg/conn_serv/conn_serv
     #!/bin/bash
@@ -336,4 +377,4 @@ procs选项在上面已经说过了，这里重点介绍proc_cfgs选项：
 
     3 directories, 9 files
     ```
-    也是正确的
+    符合预期
