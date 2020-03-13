@@ -132,3 +132,208 @@ A simple push tool,一款简单的分发工具.该工具主要目标是将不同
   report finish!
   deploy finish
   ```
+
+### 进阶配置
+  在比如游戏项目中，经常会部署多个进程，每种不同的进程会拥有不同的配置文件；同时每种进程可能产生多个实例，每个实例拥有大部分相同的配置，只有部分参数彼此不同。为了解决这种情况，该工具也支持为每一个在文件里设置了的进程生成各自对应的配置文件。配置文件由模板+参数共同构成，模板是同类进程共有的静态数据；参数用于填充模板内的占位符。参考下面一个例子：
+  ```
+  {
+  "task":"simple_game" , 
+  "deploy_host":"10.161.37.100" ,
+  "deploy_timeout":60, 
+  "remote_user":"nmsoccer" ,
+  "remote_pass":"****" ,
+  
+    "procs":[
+    {"name":"conn_serv-1" , "bin":["./bin/conn_serv/conn_serv"] , "host":"127.0.0.1" , "host_dir":"/home/nmsoccer/sg/conn_serv" , "copy_cfg":1 , "cmd":"./conn_serv -D"},
+    {"name":"conn_serv-2" , "bin":["./bin/conn_serv/conn_serv"] , "host":"10.161.37.104" , "host_dir":"/home/nmsoccer/sg/conn_serv" , "copy_cfg":1 , "cmd":"./conn_serv -D"},
+	{"name":"logic_serv-1" , "bin":["./bin/logic_serv/logic_serv"] , "host":"127.0.0.1" , "host_dir":"/home/nmsoccer/sg/logic_serv" , "copy_cfg":1 , "cmd":"./logic_serv -D"},    
+    {"name":"logic_serv-2" , "bin":["./bin/logic_serv/logic_serv"] , "host":"10.161.37.104" , "host_dir":"/home/nmsoccer/sg/logic_serv" , "copy_cfg":1 , "cmd":"./logic_serv -D"},
+    {"name":"db_serv-1" ,   "bin":["./bin/db_serv/db_serv"] , "host":"10.144.172.215" , "host_dir":"/home/nmsoccer/sg/db_serv-1" , "copy_cfg":1 , "cmd":"./db_serv"},
+    {"name":"db_serv-2" ,   "bin":["./bin/db_serv/db_serv"] , "host":"10.144.172.215" , "host_dir":"/home/nmsoccer/sg/db_serv-2" , "copy_cfg":1 , "cmd":"./db_serv"},
+    {"name":"db_serv-3" ,   "bin":["./bin/db_serv/db_serv"] , "host":"10.144.172.215" , "host_dir":"/home/nmsoccer/sg/db_serv-3" , "copy_cfg":1 , "cmd":"./db_serv"}	
+  ],
+
+  "proc_cfgs":[
+    {"name":"conn_serv-1" ,  "cfg_name":"conn_serv.cfg" , "cfg_tmpl":"./tmpl/conn_serv.tmpl" , "tmpl_param":"id=1001,ip=x.x.x.x,port=10280,name=conn_serv-1"},
+    {"name":"conn_serv-2" ,  "cfg_name":"conn_serv.cfg" , "cfg_tmpl":"./tmpl/conn_serv.tmpl", "tmpl_param":"id=1002,ip=x.x.x.x,port=10280,name=conn_serv-2"},
+    {"name":"logic_serv-1" , "cfg_name":"logic_serv.cfg" , "cfg_tmpl":"./tmpl/logic_serv.tmpl" , "tmpl_param":"id=2001,name=logic_serv-1"},
+	{"name":"logic_serv-2" , "cfg_name":"logic_serv.cfg" , "cfg_tmpl":"./tmpl/logic_serv.tmpl" , "tmpl_param":"id=2002,name=logic_serv-2"},
+	{"name":"db_serv-1" ,    "cfg_name":"db_serv.cfg" ,    "cfg_tmpl":"./tmpl/db_serv.tmpl" , "tmpl_param":"id=3001"},
+	{"name":"db_serv-2" ,    "cfg_name":"db_serv.cfg" ,    "cfg_tmpl":"./tmpl/db_serv.tmpl" , "tmpl_param":"id=3002"},
+	{"name":"db_serv-3" ,    "cfg_name":"db_serv.cfg" ,    "cfg_tmpl":"./tmpl/db_serv.tmpl" , "tmpl_param":"id=3003"}
+  ]
+   
+  }
+  ```
+上面是一个简单的游戏配置，一共三类进程，conn_serv,logic_serv,db_serv。conn_serv和logic_serv形成一组，共两组，一组部署到分发机本机，一组部署到内网另一台机器10.161.37.104上；db_serv部署到内网第三台机器10.144.172.215上，并且预计部署三个实例. 同时在部署成功之后分别在部署目录执行对应的文件。  
+procs选项在上面已经说过了，这里重点介绍proc_cfgs选项：
+  * 【name】: **必须**：这里的名字与procs项目填写的name必须对应保持一致，用于标明是哪个进程或者分发的配置文件  
+  * 【cfg_name】：**必须**：该进程或者分发生成的独有配置文件名。注意不用添加路径，最终生成的配置文件会在proc.host_dir目录下  
+  * 【cfg_tmpl】: **必须**：如果确定需要为该进程生成配置文件则必须制定该模板路径。模板里如果有参数则以$开头占位。比如conn_serv.tmpl如下所示:
+  ```
+  cat tmpl/conn_serv.tmpl 
+  #PROC ID
+  proc_id=$id
+
+  #PROC_NAME
+  proc_name="$name"
+
+  #ADDR
+  ip=$ip
+  listen_port=$port
+
+  #SPACE
+  space="test"
+
+  #MAX-CONN
+  max_conn=1024
+
+  #TIMEOUT
+  timeout=30
+  ```
+  * 【tmpl_param】：**可选**：如果cfg_tmpl制定的模板文件里有相关的占位符，则tmpl_param需要指定该占位符的值，形式为key=value。不同的组以,分割.比如conn_serv_1的为`{"name":"conn_serv-1" ,  "cfg_name":"conn_serv.cfg" , "cfg_tmpl":"./tmpl/conn_serv.tmpl" , "tmpl_param":"id=1001,ip=x.x.x.x,port=10280,name=conn_serv-1"}`, 那么结合对应的模板文件，最终会生成conn_serv.cfg如下所示：
+  ```
+  cat cfg/simple_game/conn_serv-1/conn_serv.cfg 
+  #PROC ID
+  proc_id=1001
+
+  #PROC_NAME
+  proc_name="conn_serv-1"
+
+  #ADDR
+  ip=x.x.x.x
+  listen_port=10280
+
+  #SPACE
+  space="test"
+
+  #MAX-CONN
+  max_conn=1024
+
+  #TIMEOUT
+  timeout=30
+  ```
+  
+### 进阶演示 
+这里使用simple_game来进行说明
+
+* 进入demo/simple_game/目录 执行./init.sh进行初始化工作
+* 修改./simple_game.json配置文件里的host_dir为本机的有效目录
+* 修改./simple_game.json配置文件里的host为有效IP，如果暂无多台机器可以全部设置为本地部署
+* 生成各任务配置：  
+  ```
+  ./spush -C -f ./simple_game.json
+  spush starts...
+  create cfg...
+  create ./cfg/simple_game/conn_serv-1/conn_serv.cfg success!
+  create ./cfg/simple_game/conn_serv-2/conn_serv.cfg success!
+  create ./cfg/simple_game/logic_serv-1/logic_serv.cfg success!
+  create ./cfg/simple_game/logic_serv-2/logic_serv.cfg success!
+  create ./cfg/simple_game/db_serv-1/db_serv.cfg success!
+  create ./cfg/simple_game/db_serv-2/db_serv.cfg success!
+  create ./cfg/simple_game/db_serv-3/db_serv.cfg success!
+  
+  ```
+  生成配置文件成功，并放到了当前的cfg目录中
+  
+  * 推送任务到各机器:
+  ```
+  ./spush -P -f demo/simple_game.json 
+  spush starts...
+  push all procs
+  create ./cfg/simple_game/conn_serv-1/conn_serv.cfg success!
+  create ./cfg/simple_game/conn_serv-2/conn_serv.cfg success!
+  create ./cfg/simple_game/logic_serv-1/logic_serv.cfg success!
+  create ./cfg/simple_game/logic_serv-2/logic_serv.cfg success!
+  create ./cfg/simple_game/db_serv-1/db_serv.cfg success!
+  create ./cfg/simple_game/db_serv-2/db_serv.cfg success!
+  create ./cfg/simple_game/db_serv-3/db_serv.cfg success!
+  ...
+  ----------Push <simple_game> Result---------- 
+  ok
+  .
+  [db_serv-3]::success 
+  [conn_serv-1]::success 
+  [conn_serv-2]::success 
+  [logic_serv-1]::success 
+  [logic_serv-2]::success 
+  [db_serv-1]::success 
+  [db_serv-2]::success
+  ```
+  我们看到都已部署成功鸟。
+  
+  * 验证本机:
+    ```
+    tree /home/nmsoccer/sg/
+    /home/nmsoccer/sg/
+    |-- conn_serv
+    |   |-- conn_serv
+    |   |-- conn_serv.cfg
+    |   `-- log
+    `-- logic_serv
+        |-- log
+        |-- logic_serv
+        `-- logic_serv.cfg
+    ```
+    因为我们在设置里面有部署后执行对应的脚本文件比如`{"name":"conn_serv-1" , "bin":["./bin/conn_serv/conn_serv"] , "host":"127.0.0.1" , "host_dir":"/home/nmsoccer/sg/conn_serv" , "copy_cfg":1 , "cmd":"./conn_serv -D"},` 而conn_serv是一个简单的脚本文件
+    ```
+    cat /home/nmsoccer/sg/conn_serv/conn_serv
+    #!/bin/bash
+    log="./log"
+    ts=`date +"%F %T"`
+    echo "conn_serv $1 starts at $ts..." >> $log
+    ```
+    会将当前时间写到本地目录的./log文件里，我们检查下是否完成：
+    ```
+    cat /home/nmsoccer/sg/conn_serv/log 
+    conn_serv -D starts at 2020-03-13 20:03:05...
+    ```
+    OK,没有问题。
+    
+  * 验证10.161.37.104：
+    这台机器上部署了另外一组conn_serv,logic_serv进程对，它们实例分别为conn_serv-2，logic_serv-2：
+    ```
+    tree /home/nmsoccer/sg/; cat /home/nmsoccer/sg/logic_serv/logic_serv.cfg 
+    /home/nmsoccer/sg/
+    |-- conn_serv
+    |   |-- conn_serv
+    |   |-- conn_serv.cfg
+    |   `-- log
+    `-- logic_serv
+        |-- log
+        |-- logic_serv
+        `-- logic_serv.cfg
+
+    2 directories, 6 files
+    #PROC ID
+    proc_id=2002
+
+    #PROC_NAME
+    proc_name="logic_serv-2"
+
+    #MAX_PLAYER
+    max_player=5000
+    ```
+    可以确认是正常的
+    
+  * 验证10.144.172.215：
+    这里部署了db_serv的三个实例：
+    ```
+    tree /home/leiming/sg/
+    /home/leiming/sg/
+    |-- db_serv-1
+    |   |-- db_serv
+    |   |-- db_serv.cfg
+    |   `-- log
+    |-- db_serv-2
+    |   |-- db_serv
+    |   |-- db_serv.cfg
+    |   `-- log
+    `-- db_serv-3
+        |-- db_serv
+        |-- db_serv.cfg
+        `-- log
+
+    3 directories, 9 files
+    ```
+    也是正确的
