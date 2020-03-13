@@ -52,7 +52,6 @@ function local_dispatch()
   cd $peer_dir/ 
   chmod u+x $peer_exe
   ./$peer_exe "l" $proc_name "127.0.0.1" $m_port $t_foot "$t_cmd" $task_name
-  
 
   cd $working_dir
   echo "dispatch $1 to $t_dir success"

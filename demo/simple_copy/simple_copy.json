@@ -5,8 +5,8 @@
  "remote_user":"" ,
  "remote_pass":"" ,
  "procs":[
-   {"name":"cpy1" , "bin":["./tools/" , "./init.sh"] , "host":"" , "host_dir":"/home/nmsoccer/spush_demo/simple_copy/cpy1" , "copy_cfg":0 , "cmd":""} , 
-   {"name":"cpy2" , "bin":["/etc/passwd"] , "host":"127.0.0.1" , "host_dir":"/home/nmsoccer/spush_demo/simple_copy/cpy2" , "copy_cfg":0 , "cmd":""} 
+   {"name":"cpy1" , "bin":["/etc/profile.d/" , "./init.sh"] , "host":"" , "host_dir":"/home/nmsoccer/spush_demo/simple_copy/cpy1" , "copy_cfg":0 , "cmd":""} , 
+   {"name":"cpy2" , "bin":["/etc/passwd" , "./count.sh"] , "host":"127.0.0.1" , "host_dir":"/home/nmsoccer/spush_demo/simple_copy/cpy2" , "copy_cfg":0 , "cmd":"./count.sh cs suomei"} 
   ] ,
   
   "proc_cfgs":[

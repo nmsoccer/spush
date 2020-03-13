@@ -1,0 +1,4 @@
+!/bin/bash
+log="./log"
+ts=`date +"%F %T"`
+echo "db_serv $1 starts at $ts..." >> $log

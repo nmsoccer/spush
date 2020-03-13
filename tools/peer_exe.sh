@@ -70,7 +70,7 @@ function report()
 
 function clean_footprint()
 {
-  cd ..
+  #cd ..
   #clear tar files
   rm ./$proc_name.tar.gz
   rm ./$proc_name.tar.gz.md5
@@ -102,12 +102,26 @@ function main()
   report
   echo "deploy finish" >> $log
 
-  command $cmd
+  cd ..
+  #command $cmd 
+  #nohup $cmd &
 
   if [[ $foot != "y" ]]
   then
     clean_footprint 
   fi
+
+  #run cmd
+  echo "run cmd:$cmd" >> $log
+  real_cmd=`echo $cmd | awk '{print $1}'`
+  if [[ -e $real_cmd ]]
+  then
+   #echo "chmod $real_cmd" >> $log
+   chmod u+x $real_cmd
+  fi
+  command $cmd 1>/dev/null 2>/dev/null 
+
+  return 0
 }
 
 main

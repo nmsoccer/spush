@@ -246,7 +246,7 @@ func main() {
 			//3. gen pkg	
 		var pproc *Proc;	
 		for _ , pproc = range conf.Procs {
-			gen_pkg(pproc);
+			go gen_pkg(pproc);
 		}
 		
 			//4. push result
@@ -257,6 +257,7 @@ func main() {
 		case push_result := <- ch:
 			fmt.Printf("\n----------Push <%s> Result---------- \n%s\n", conf.TaskName , push_result);	
 		}
+		time.Sleep(1e9);
 		print_push_result();
 		break;
 	case *PushSome != "":
@@ -367,9 +368,10 @@ func gen_pkg(pproc *Proc) int {
 	}
 	
 	push_cmd := exec.Command("./tools/push.sh", conf.TaskName , pproc.Name , pproc.Host , pproc.HostDir , conf.DeployHost , strconv.Itoa(ListenPort) , 
-		conf.DeployUser , conf.DeployPass , keep_footprint , pproc.Cmd);
+		conf.DeployUser , conf.DeployPass , keep_footprint , pproc.Cmd , "&");
 	cmd_result := bytes.Buffer{};
 	push_cmd.Stdout = &cmd_result;
+	v_print("exe push %v\n" , push_cmd.Args);
 	err = push_cmd.Run();
 	if err != nil {
 		fmt.Printf("exe push failed! err:%s cmd:%v\n", err , push_cmd.Args);
@@ -470,6 +472,7 @@ func print_push_result() {
 	check_map := push_total.push_map;
 	code_converse := map[int]string {PUSH_ING:"timeout" , PUSH_SUCCESS:"success" , PUSH_ERR:"err"};
 	push_lock.Lock();
+	fmt.Printf("\n");
 	for proc_name , presult := range check_map {
 		fmt.Printf("[%s]::%s %s\n", proc_name , code_converse[presult.status] , presult.info);
 	}
