@@ -471,12 +471,28 @@ func init_push_result(procs []*Proc)  {
 func print_push_result() {
 	check_map := push_total.push_map;
 	code_converse := map[int]string {PUSH_ING:"timeout" , PUSH_SUCCESS:"success" , PUSH_ERR:"err"};
+	results := make([]string , len(check_map));
+	i := 0;
+	success := 0;
 	push_lock.Lock();
-	fmt.Printf("\n");
+	for proc_name , presult := range check_map {
+	  str := fmt.Sprintf("[%s]::%s %s", proc_name , code_converse[presult.status] , presult.info);
+	  results[i] = str;
+	  i += 1;
+	  if presult.status == PUSH_SUCCESS {
+	    success += 1;
+	  } 
+	}  
+	push_lock.Unlock();
+	fmt.Printf("\n[%d/%d]\n" , success , len(check_map));
+    for _ , result := range results {
+	  fmt.Printf("%s\n" , result);
+	}
+	/*
 	for proc_name , presult := range check_map {
 		fmt.Printf("[%s]::%s %s\n", proc_name , code_converse[presult.status] , presult.info);
 	}
-	push_lock.Unlock();
+	*/
 }
 
 func check_push_result(c chan string) {
