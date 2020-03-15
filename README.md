@@ -86,6 +86,7 @@ A Simple Push tool,一款简单的分发工具.主要目的是将不同的文件
   .
   ----------Push <simple_copy> Result---------- 
   ok
+  [2/2]
   [cpy1]::success 
   [cpy2]::success
   ```
@@ -292,7 +293,7 @@ procs选项在上面已经说过了，这里重点介绍proc_cfgs选项：
   ...
   ----------Push <simple_game> Result---------- 
   ok
-  .
+  [7/7]
   [db_serv-3]::success 
   [conn_serv-1]::success 
   [conn_serv-2]::success 
