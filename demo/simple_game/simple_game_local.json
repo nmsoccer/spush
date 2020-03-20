@@ -1,0 +1,28 @@
+{
+  "task":"simple_game" , 
+  "deploy_host":"" ,
+  "deploy_timeout":60, 
+  "remote_user":"nmsoccer" ,
+  "remote_pass":"****" ,
+  
+  "procs":[
+    {"name":"conn_serv-1" , "bin":["./bin/conn_serv/conn_serv"] , "host":"127.0.0.1" , "host_dir":"/home/nmsoccer/sg/group1/conn_serv" , "copy_cfg":1 , "cmd":"./conn_serv -D"},
+    {"name":"conn_serv-2" , "bin":["./bin/conn_serv/conn_serv"] , "host":"" , "host_dir":"/home/nmsoccer/sg/group2/conn_serv" , "copy_cfg":1 , "cmd":"./conn_serv -D"},
+	{"name":"logic_serv-1" , "bin":["./bin/logic_serv/logic_serv"] , "host":"127.0.0.1" , "host_dir":"/home/nmsoccer/sg/group1/logic_serv" , "copy_cfg":1 , "cmd":"./logic_serv -D"},    
+    {"name":"logic_serv-2" , "bin":["./bin/logic_serv/logic_serv"] , "host":"" , "host_dir":"/home/nmsoccer/sg/group2/logic_serv" , "copy_cfg":1 , "cmd":"./logic_serv -D"},
+    {"name":"db_serv-1" ,   "bin":["./bin/db_serv/db_serv"] , "host":"" , "host_dir":"/home/nmsoccer/sg/db_serv-1" , "copy_cfg":1 , "cmd":"./db_serv"},
+    {"name":"db_serv-2" ,   "bin":["./bin/db_serv/db_serv"] , "host":"" , "host_dir":"/home/nmsoccer/sg/db_serv-2" , "copy_cfg":1 , "cmd":"./db_serv"},
+    {"name":"db_serv-3" ,   "bin":["./bin/db_serv/db_serv"] , "host":"" , "host_dir":"/home/nmsoccer/sg/db_serv-3" , "copy_cfg":1 , "cmd":"./db_serv"}	
+  ],
+
+  "proc_cfgs":[
+    {"name":"conn_serv-1" ,  "cfg_name":"conn_serv.cfg" , "cfg_tmpl":"./tmpl/conn_serv.tmpl" , "tmpl_param":"id=1001,ip=x.x.x.x,port=10280,name=conn_serv-1"},
+    {"name":"conn_serv-2" ,  "cfg_name":"conn_serv.cfg" , "cfg_tmpl":"./tmpl/conn_serv.tmpl", "tmpl_param":"id=1002,ip=x.x.x.x,port=10280,name=conn_serv-2"},
+    {"name":"logic_serv-1" , "cfg_name":"logic_serv.cfg" , "cfg_tmpl":"./tmpl/logic_serv.tmpl" , "tmpl_param":"id=2001,name=logic_serv-1"},
+	{"name":"logic_serv-2" , "cfg_name":"logic_serv.cfg" , "cfg_tmpl":"./tmpl/logic_serv.tmpl" , "tmpl_param":"id=2002,name=logic_serv-2"},
+	{"name":"db_serv-1" ,    "cfg_name":"db_serv.cfg" ,    "cfg_tmpl":"./tmpl/db_serv.tmpl" , "tmpl_param":"id=3001"},
+	{"name":"db_serv-2" ,    "cfg_name":"db_serv.cfg" ,    "cfg_tmpl":"./tmpl/db_serv.tmpl" , "tmpl_param":"id=3002"},
+	{"name":"db_serv-3" ,    "cfg_name":"db_serv.cfg" ,    "cfg_tmpl":"./tmpl/db_serv.tmpl" , "tmpl_param":"id=3003"}
+  ]
+   
+}
