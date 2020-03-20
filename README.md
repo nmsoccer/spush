@@ -360,8 +360,8 @@ procs选项在上面已经说过了，这里重点介绍proc_cfgs选项：
   * 验证10.144.172.215：
     这里部署了db_serv的三个实例：
     ```
-    tree /home/leiming/sg/
-    /home/leiming/sg/
+    tree /home/nmsoccer/sg/
+    /home/nmsoccer/sg/
     |-- db_serv-1
     |   |-- db_serv
     |   |-- db_serv.cfg
