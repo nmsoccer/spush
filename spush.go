@@ -441,7 +441,8 @@ func create_cfg(pcfg *ProcCfg) int {
 		
 		//replace param
 		for k , v := range tmpl_param_map {
-			cfg_content = bytes.ReplaceAll(cfg_content, []byte("$"+k), []byte(v));
+			//cfg_content = bytes.ReplaceAll(cfg_content, []byte("$"+k), []byte(v)); not ava for <go1.12
+			cfg_content = bytes.Replace(cfg_content, []byte("$"+k), []byte(v) , -1);
 		}
 						
 	}
