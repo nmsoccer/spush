@@ -260,7 +260,7 @@ procs选项在上面已经说过了，这里重点介绍proc_cfgs选项：
 
 * 进入demo/simple_game/目录 执行./init.sh进行初始化工作
 * 修改./simple_game.json配置文件里的host_dir为本机的有效目录
-* 修改./simple_game.json配置文件里的host为有效IP，如果暂无多台机器可以全部设置为本地部署
+* 修改./simple_game.json配置文件里的host为有效IP，如果暂无多台机器可以使用配置文件simple_game_local.json部署到本机测试
 * 生成各任务配置：  
   ```
   ./spush -C -f ./simple_game.json
