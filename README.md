@@ -364,7 +364,6 @@ procs选项在上面已经说过了，这里重点介绍proc_cfgs选项：
         |-- logic_serv
         `-- logic_serv.cfg
 
-    2 directories, 6 files
     #PROC ID
     proc_id=2002
 
