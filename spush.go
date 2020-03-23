@@ -217,24 +217,12 @@ func main() {
 	switch  {
 	case *CreateCfg:
 		fmt.Println("create cfg...");
-		if len(conf.ProcCfgs)<=0 {
-			fmt.Printf("nothing to do\n");
-			break;
-		}
-		var pcfg *ProcCfg;
-		for _ , pcfg = range conf.ProcCfgs {
-			//proc_map[pcfg.Name].cfg_file = pcfg.CfgName;
-			create_cfg(pcfg);
-		}
+		create_all_cfg();
 		//fallthrough;
-		break;
 	case *PushAll:
 		fmt.Println("push all procs");
 			//1. create cfg
-		var pcfg *ProcCfg;
-		for _ , pcfg = range conf.ProcCfgs {
-			create_cfg(pcfg);
-		}
+		create_all_cfg();
 		
 			//2. routine			
 		ch := make(chan string)
@@ -313,6 +301,13 @@ func parse_tmpl_param(src string , result map[string]string)  int {
 	return 0;	
 }
 
+func parse_some_procs_arg(arg string) ([]*Proc) {
+	var procs  = make([]*Proc , 0);
+	return procs
+}
+
+
+
 func gen_pkg(pproc *Proc) int {
 	var _func_ = "<gen_pkg>";
 		
@@ -389,12 +384,39 @@ func gen_pkg(pproc *Proc) int {
 	return 0; 
 }
 
+func create_all_cfg() {
+	var success = 0;
+	var pcfg *ProcCfg;
+	//del old dir
+	old_dir := CfgDir + conf.TaskName + "/";
+	err := os.RemoveAll(old_dir);
+	if err != nil {
+		fmt.Printf("remove %s failed! err:%s\n", old_dir , err);
+	}
+	
+	for _ , pcfg = range conf.ProcCfgs {
+		ret := create_cfg(pcfg);
+		if ret == 0 {
+			success += 1;
+		}
+	}
+	fmt.Printf("\n:%d/%d\n", success , len(conf.ProcCfgs));
+}
 
 
 func create_cfg(pcfg *ProcCfg) int {
-	cfg_path := CfgDir + conf.TaskName + "/" + pcfg.Name; //cfg/$task/$proc_name/
-	
+	cfg_base := CfgDir + conf.TaskName + "/" + pcfg.Name; //cfg/$task/$proc_name/
+	cfg_path := cfg_base;
+	//parse CfgName
+	good_path := strings.Trim(pcfg.CfgName , "/");
+	sub_dir , cfg_file := filepath.Split(good_path);
+				
 	//create dir
+	if len(sub_dir)>0 {
+		cfg_path = cfg_path + "/" + sub_dir; 
+	} else {
+		cfg_path += "/";
+	}
 	err := os.MkdirAll(cfg_path, 0766);
 	if err != nil {
 		fmt.Printf("create dir %s failed! err:%s", cfg_path , err);
@@ -402,7 +424,8 @@ func create_cfg(pcfg *ProcCfg) int {
 	}
 	
 	//create file
-	cfg_real := cfg_path + "/" + pcfg.CfgName;
+	//cfg_real := cfg_path + "/" + pcfg.CfgName;	
+	cfg_real := cfg_path + cfg_file;
 	fp , err := os.OpenFile(cfg_real, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0644);
 	if err != nil {
 		fmt.Printf("open %s failed! err:%s", cfg_real , err);
@@ -441,7 +464,7 @@ func create_cfg(pcfg *ProcCfg) int {
 		
 		//replace param
 		for k , v := range tmpl_param_map {
-			//cfg_content = bytes.ReplaceAll(cfg_content, []byte("$"+k), []byte(v)); not ava for <go1.12
+			//cfg_content = bytes.ReplaceAll(cfg_content, []byte("$"+k), []byte(v)); not avai for go < 1.12
 			cfg_content = bytes.Replace(cfg_content, []byte("$"+k), []byte(v) , -1);
 		}
 						
@@ -454,7 +477,12 @@ func create_cfg(pcfg *ProcCfg) int {
 		fmt.Printf("write to %s failed! err:%s", cfg_real , err);
 		return -1;
 	}
-	proc_map[pcfg.Name].cfg_file = cfg_real;
+	if len(sub_dir)> 0 {
+		first_dir := bytes.Split([]byte(sub_dir), []byte("/"))[0];
+		proc_map[pcfg.Name].cfg_file = cfg_base + "/" + string(first_dir) + "/";	
+	} else {
+		proc_map[pcfg.Name].cfg_file = cfg_real;
+	}
 	fmt.Printf("create %s success!\n", cfg_real);
 	return 0;
 }

@@ -12,7 +12,7 @@ t_foot=$9
 shift
 t_cmd=$9
 working_dir=`pwd`
-peer_dir="spush_${task_name}_tools"
+peer_dir="spush_${task_name}_${proc_name}_tools"
 peer_exe="peer_exe.sh"
 report="report.c"
 

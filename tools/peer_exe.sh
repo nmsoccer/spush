@@ -11,7 +11,7 @@ ts=`date +"%F %T"`
 report_src="./report.c"
 report_bin="./report"
 log_dir="/tmp/spush/$task_name/$proc_name"
-my_tool_dir="spush_${task_name}_tools"
+my_tool_dir="spush_${task_name}_${proc_name}_tools"
 log="$log_dir/log"
 
 
