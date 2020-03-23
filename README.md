@@ -39,8 +39,11 @@ A Simple Push tool,一款简单的分发工具.主要目的是将不同的文件
  "remote_pass":"" ,
  "procs":[
    {"name":"cpy1" , "bin":["/etc/profile.d/" , "./init.sh"] , "host":"" , "host_dir":"/home/nmsoccer/spush_demo/simple_copy/cpy1" , "copy_cfg":0 , "cmd":""} , 
-   {"name":"cpy2" , "bin":["/etc/passwd" , "./count.sh"] , "host":"127.0.0.1" , "host_dir":"/home/nmsoccer/spush_demo/simple_copy/cpy2" , "copy_cfg":0 , "cmd":"./count.sh cs suomei"} 
+   {"name":"cpy2" , "bin":["/etc/passwd" , "./count.sh"] , "host":"127.0.0.1" , "host_dir":"/home/nmsoccer/spush_demo/simple_copy/cpy2" , "copy_cfg":0 , "cmd":"./count.sh cs suomei"},
+   {"name":"cpy3" , "bin":["/etc/passwd"] , "host":"" , "host_dir":"/home/nmsoccer/spush_demo/simple_copy/misc/" }, 
+   {"name":"cpy4" , "bin":["./count.sh"] , "host":"" , "host_dir":"/home/nmsoccer/spush_demo/simple_copy/misc/"}
   ] ,
+  
   
   "proc_cfgs":[
   ]
@@ -79,17 +82,22 @@ A Simple Push tool,一款简单的分发工具.主要目的是将不同的文件
 
 * 推送：
   ```
-  ./spush -P -f ./simple_copy.json 
+  /spush -P  -f demo/simple_copy.json 
   spush starts...
   push all procs
+
+  :0/0
   .
   ----------Push <simple_copy> Result---------- 
   ok
-  [2/2]
-  [cpy1]::success 
-  [cpy2]::success
+  .
+  [4/4]
+  [cpy2]::success 
+  [cpy3]::success 
+  [cpy4]::success 
+  [cpy1]::success
   ```
-  推送成功，这里可以显示两项任务都OK鸟。我们可以去看一看目标的目录是否欧杰把客
+  推送成功，这里可以显示4项任务都OK鸟。我们可以去看一看目标的目录是否欧杰把客
   ```
   tree /home/nmsoccer/spush_demo/
   /home/nmsoccer/spush_demo/
@@ -116,12 +124,16 @@ A Simple Push tool,一款简单的分发工具.主要目的是将不同的文件
       |       |-- vim.sh
       |       |-- which2.csh
       |       `-- which2.sh
-      `-- cpy2
-          |-- count.info
+      |-- cpy2
+      |   |-- count.info
+      |   |-- count.sh
+      |   `-- passwd
+      `-- misc
           |-- count.sh
           `-- passwd
+
     ```
-  看了下都是OK的了,当然这里已经把痕迹都删除了，如果想要查看部署后的遗留可以加上-r选项。其中cpy2的分发在分发成功之后执行了./count.sh cs suomei，我们可以检查一下count.sh脚本
+  看了下都是OK的了。其中cpy3和cpy4将文件部署到了相同的目录misc。这里已经把痕迹都删除了，如果想要查看部署后的遗留可以加上-r选项。其中cpy2的分发在分发成功之后执行了./count.sh cs suomei，我们可以检查一下count.sh脚本
   ```
   cat count.sh
   #!/bin/bash
@@ -156,7 +168,11 @@ A Simple Push tool,一款简单的分发工具.主要目的是将不同的文件
    `-- simple_copy
        |-- cpy1
        |   `-- log
-       `-- cpy2
+       |-- cpy2
+       |   `-- log
+       |-- cpy3
+       |   `-- log
+       `-- cpy4
            `-- log
    ```
    都是这样的层次。查看一下内容
@@ -195,13 +211,13 @@ A Simple Push tool,一款简单的分发工具.主要目的是将不同的文件
   ],
 
   "proc_cfgs":[
-    {"name":"conn_serv-1" ,  "cfg_name":"conn_serv.cfg" , "cfg_tmpl":"./tmpl/conn_serv.tmpl" , "tmpl_param":"id=1001,ip=x.x.x.x,port=10280,name=conn_serv-1"},
-    {"name":"conn_serv-2" ,  "cfg_name":"conn_serv.cfg" , "cfg_tmpl":"./tmpl/conn_serv.tmpl", "tmpl_param":"id=1002,ip=x.x.x.x,port=10280,name=conn_serv-2"},
+    {"name":"conn_serv-1" ,  "cfg_name":"conf/conn_serv.cfg" , "cfg_tmpl":"./tmpl/conn_serv.tmpl" , "tmpl_param":"id=1001,ip=x.x.x.x,port=10280,name=conn_serv-1"},
+    {"name":"conn_serv-2" ,  "cfg_name":"conf.conn_serv.cfg" , "cfg_tmpl":"./tmpl/conn_serv.tmpl", "tmpl_param":"id=1002,ip=x.x.x.x,port=10280,name=conn_serv-2"},
     {"name":"logic_serv-1" , "cfg_name":"logic_serv.cfg" , "cfg_tmpl":"./tmpl/logic_serv.tmpl" , "tmpl_param":"id=2001,name=logic_serv-1"},
 	{"name":"logic_serv-2" , "cfg_name":"logic_serv.cfg" , "cfg_tmpl":"./tmpl/logic_serv.tmpl" , "tmpl_param":"id=2002,name=logic_serv-2"},
-	{"name":"db_serv-1" ,    "cfg_name":"db_serv.cfg" ,    "cfg_tmpl":"./tmpl/db_serv.tmpl" , "tmpl_param":"id=3001"},
-	{"name":"db_serv-2" ,    "cfg_name":"db_serv.cfg" ,    "cfg_tmpl":"./tmpl/db_serv.tmpl" , "tmpl_param":"id=3002"},
-	{"name":"db_serv-3" ,    "cfg_name":"db_serv.cfg" ,    "cfg_tmpl":"./tmpl/db_serv.tmpl" , "tmpl_param":"id=3003"}
+	{"name":"db_serv-1" ,    "cfg_name":"conf/db/db_serv.cfg" ,    "cfg_tmpl":"./tmpl/db_serv.tmpl" , "tmpl_param":"id=3001"},
+	{"name":"db_serv-2" ,    "cfg_name":"conf/db/db_serv.cfg" ,    "cfg_tmpl":"./tmpl/db_serv.tmpl" , "tmpl_param":"id=3002"},
+	{"name":"db_serv-3" ,    "cfg_name":"conf/db/db_serv.cfg" ,    "cfg_tmpl":"./tmpl/db_serv.tmpl" , "tmpl_param":"id=3003"}
   ]
    
   }
@@ -209,7 +225,7 @@ A Simple Push tool,一款简单的分发工具.主要目的是将不同的文件
 上面是一个简单的游戏配置，一共三类进程，conn_serv,logic_serv,db_serv，分别简单代表游戏的接入层逻辑层和数据层进程。conn_serv和logic_serv组成一组，一共两组。一组部署到分发机本机，一组部署到内网另一台机器10.161.37.104上；db_serv部署到内网第三台机器10.144.172.215上，并且预计部署三个实例. 最后，在部署成功之后分别在执行相应应的文件。    
 procs选项在上面已经说过了，这里重点介绍proc_cfgs选项：
   * 【name】: **必须**：这里的名字与procs项目填写的name必须对应保持一致，用于标明是哪个进程或者分发的配置文件  
-  * 【cfg_name】：**必须**：该进程或者分发生成的独有配置文件名。注意不用添加路径，最终生成的配置文件会在proc.host_dir目录下  
+  * 【cfg_name】：**必须**：该进程或者分发生成的独有配置文件名。注意如果包含路径则表示相对路径，最终生成的配置文件会根据cfg_name里的目录层次放置在proc.host_dir目录下  
   * 【cfg_tmpl】: **必须**：如果确定需要为该进程生成配置文件则必须制定该模板路径。模板里如果有参数则以$开头占位。比如conn_serv.tmpl如下所示:
   ```
   cat tmpl/conn_serv.tmpl 
@@ -232,9 +248,9 @@ procs选项在上面已经说过了，这里重点介绍proc_cfgs选项：
   #TIMEOUT
   timeout=30
   ```
-  * 【tmpl_param】：**可选**：如果cfg_tmpl制定的模板文件里有相关的占位符，则tmpl_param需要指定该占位符的值，形式为key=value。不同的组以,分割.比如conn_serv_1的为`{"name":"conn_serv-1" ,  "cfg_name":"conn_serv.cfg" , "cfg_tmpl":"./tmpl/conn_serv.tmpl" , "tmpl_param":"id=1001,ip=x.x.x.x,port=10280,name=conn_serv-1"}`, 那么结合对应的模板文件，最终会生成conn_serv.cfg如下所示：
+  * 【tmpl_param】：**可选**：如果cfg_tmpl制定的模板文件里有相关的占位符，则tmpl_param需要指定该占位符的值，形式为key=value。不同的组以,分割.比如conn_serv_1的为`{"name":"conn_serv-1" ,  "cfg_name":"conf/conn_serv.cfg" , "cfg_tmpl":"./tmpl/conn_serv.tmpl" , "tmpl_param":"id=1001,ip=x.x.x.x,port=10280,name=conn_serv-1"}`, 那么结合对应的模板文件，最终会生成conn_serv.cfg如下所示：
   ```
-  cat cfg/simple_game/conn_serv-1/conn_serv.cfg 
+  cat cfg/simple_game/conn_serv-1/conf/conn_serv.cfg 
   #PROC ID
   proc_id=1001
 
@@ -266,13 +282,13 @@ procs选项在上面已经说过了，这里重点介绍proc_cfgs选项：
   ./spush -C -f ./simple_game.json
   spush starts...
   create cfg...
-  create ./cfg/simple_game/conn_serv-1/conn_serv.cfg success!
-  create ./cfg/simple_game/conn_serv-2/conn_serv.cfg success!
+  create ./cfg/simple_game/conn_serv-1/conf/conn_serv.cfg success!
+  create ./cfg/simple_game/conn_serv-2/conf/conn_serv.cfg success!
   create ./cfg/simple_game/logic_serv-1/logic_serv.cfg success!
   create ./cfg/simple_game/logic_serv-2/logic_serv.cfg success!
-  create ./cfg/simple_game/db_serv-1/db_serv.cfg success!
-  create ./cfg/simple_game/db_serv-2/db_serv.cfg success!
-  create ./cfg/simple_game/db_serv-3/db_serv.cfg success!
+  create ./cfg/simple_game/db_serv-1/conf/db/db_serv.cfg success!
+  create ./cfg/simple_game/db_serv-2/conf/db/db_serv.cfg success!
+  create ./cfg/simple_game/db_serv-3/conf/db/db_serv.cfg success!
   
   ```
   生成配置文件成功，并放到了当前的cfg目录中
@@ -282,13 +298,13 @@ procs选项在上面已经说过了，这里重点介绍proc_cfgs选项：
   ./spush -P -f demo/simple_game.json 
   spush starts...
   push all procs
-  create ./cfg/simple_game/conn_serv-1/conn_serv.cfg success!
-  create ./cfg/simple_game/conn_serv-2/conn_serv.cfg success!
+  create ./cfg/simple_game/conn_serv-1/conf/conn_serv.cfg success!
+  create ./cfg/simple_game/conn_serv-2/conf/conn_serv.cfg success!
   create ./cfg/simple_game/logic_serv-1/logic_serv.cfg success!
   create ./cfg/simple_game/logic_serv-2/logic_serv.cfg success!
-  create ./cfg/simple_game/db_serv-1/db_serv.cfg success!
-  create ./cfg/simple_game/db_serv-2/db_serv.cfg success!
-  create ./cfg/simple_game/db_serv-3/db_serv.cfg success!
+  create ./cfg/simple_game/db_serv-1/conf/db/db_serv.cfg success!
+  create ./cfg/simple_game/db_serv-2/conf/db/db_serv.cfg success!
+  create ./cfg/simple_game/db_serv-3/conf/db/db_serv.cfg success!
   ...
   ----------Push <simple_game> Result---------- 
   ok
@@ -306,8 +322,10 @@ procs选项在上面已经说过了，这里重点介绍proc_cfgs选项：
   * 验证本机:
     ```
     tree /home/nmsoccer/sg/
-    /home/nmsoccer/sg/
+    sg/
     |-- conn_serv
+    |   |-- conf
+    |   |   `-- conn_serv.cfg
     |   |-- conn_serv
     |   |-- conn_serv.cfg
     |   `-- log
@@ -338,7 +356,8 @@ procs选项在上面已经说过了，这里重点介绍proc_cfgs选项：
     /home/nmsoccer/sg/
     |-- conn_serv
     |   |-- conn_serv
-    |   |-- conn_serv.cfg
+    |   |-- conf
+    |   |   `-- conn_serv.cfg
     |   `-- log
     `-- logic_serv
         |-- log
@@ -363,18 +382,23 @@ procs选项在上面已经说过了，这里重点介绍proc_cfgs选项：
     tree /home/nmsoccer/sg/
     /home/nmsoccer/sg/
     |-- db_serv-1
+    |   |-- conf
+    |   |   `-- db
+    |   |       `-- db_serv.cfg
     |   |-- db_serv
-    |   |-- db_serv.cfg
     |   `-- log
     |-- db_serv-2
+    |   |-- conf
+    |   |   `-- db
+    |   |       `-- db_serv.cfg
     |   |-- db_serv
-    |   |-- db_serv.cfg
     |   `-- log
     `-- db_serv-3
+        |-- conf
+        |   `-- db
+        |       `-- db_serv.cfg
         |-- db_serv
-        |-- db_serv.cfg
         `-- log
 
-    3 directories, 9 files
     ```
-    符合预期
+    其中db_serv.cfg保持了配置的目录结构，符合预期
