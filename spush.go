@@ -16,6 +16,7 @@ import (
 	"strconv"
 	"sync"
 	"path/filepath"
+	"regexp"
 )
 
 var DefaultPushTimeout int =30 //default 30s timeout
@@ -100,7 +101,11 @@ var push_total = PushTotal{complete:0};
 var push_lock sync.Mutex;
 
 func main() {
-	fmt.Println("spush starts...");
+	var curr_time time.Time;
+	curr_time = time.Now();
+	fmt.Printf("\n++++++++++++++++++++spush (%04d-%02d-%02d %02d:%02d:%02d)++++++++++++++++++++\n" , curr_time.Year() , int(curr_time.Month()) , 
+	    curr_time.Day() , curr_time.Hour() , curr_time.Minute() , curr_time.Second());
+	
 	flag.Parse();
 	//check flag
 	if flag.NFlag() <= 0 {
@@ -221,42 +226,29 @@ func main() {
 		//fallthrough;
 	case *PushAll:
 		fmt.Println("push all procs");
-			//1. create cfg
-		create_all_cfg();
-		
-			//2. routine			
-		ch := make(chan string)
-		init_push_result(conf.Procs);		
-		go check_push_result(ch);
-		
-		timing_ch := time.Tick(time.Second * time.Duration(conf.DeployTimeOut)); //default 30s timeout
-					
-			//3. gen pkg	
-		var pproc *Proc;	
-		for _ , pproc = range conf.Procs {
-			go gen_pkg(pproc);
-		}
-		
-			//4. push result
-		select {
-		case <- timing_ch:
-			fmt.Printf("\n----------Push <%s> Timeout----------\n" , conf.TaskName);
-
-		case push_result := <- ch:
-			fmt.Printf("\n----------Push <%s> Result---------- \n%s\n", conf.TaskName , push_result);	
-		}
-		time.Sleep(1e9);
-		print_push_result();
+		push_procs(conf.Procs);
 		break;
 	case *PushSome != "":
-		fmt.Printf("try to push some procs:%s\n", *PushSome);
+		fmt.Printf("push some procs:%s\n", *PushSome);
+		//1. match procs
+		procs := parse_some_procs_arg(*PushSome);
+		fmt.Printf("matched procs num:%d\n", len(procs));
+		if len(procs) <= 0 {
+			fmt.Printf("no-proc found!\n");
+			break;
+		}
+		
+		//2. push
+		push_procs(procs);				
 		break;
 	default:
 		fmt.Println("nothing to do");
 		break;
 	}
 	
-	
+	curr_time = time.Now();
+	fmt.Printf("\n+++++++++++++++++++++end (%04d-%02d-%02d %02d:%02d:%02d)+++++++++++++++++++++\n" , curr_time.Year() , int(curr_time.Month()) , 
+	    curr_time.Day() , curr_time.Hour() , curr_time.Minute() , curr_time.Second());
 	return;
 }
 
@@ -301,9 +293,51 @@ func parse_tmpl_param(src string , result map[string]string)  int {
 	return 0;	
 }
 
-func parse_some_procs_arg(arg string) ([]*Proc) {
+//后缀的匹配
+func parse_some_procs_arg(pattern string) ([]*Proc) {
 	var procs  = make([]*Proc , 0);
+	
+	v_print("pattern:%s\n", pattern);
+	//try-match all proc
+	var pproc *Proc;
+	
+	for _ , pproc = range conf.Procs {
+		ok , _ := regexp.MatchString(pattern, pproc.Name);
+		if ok {
+			v_print("%s matched!\n" , pproc.Name);
+			procs = append(procs , pproc);
+		}
+	} 
+	
 	return procs
+}
+
+func push_procs(procs [] *Proc) {
+	//1. create cfg
+	create_all_cfg();
+		
+	//2. routine			
+	ch := make(chan string)
+	init_push_result(procs);		
+	go check_push_result(ch);		
+	timing_ch := time.Tick(time.Second * time.Duration(conf.DeployTimeOut)); //default 30s timeout
+					
+	//3. gen pkg	
+	var pproc *Proc;	
+	for _ , pproc = range procs {
+		go gen_pkg(pproc);
+	}
+		
+	//4. push result
+	select {
+	case <- timing_ch:
+		fmt.Printf("\n----------Push <%s> Timeout----------\n" , conf.TaskName);
+
+	case push_result := <- ch:
+		fmt.Printf("\n----------Push <%s> Result---------- \n%s\n", conf.TaskName , push_result);	
+	}
+	time.Sleep(1e9);
+	print_push_result();
 }
 
 
@@ -400,7 +434,7 @@ func create_all_cfg() {
 			success += 1;
 		}
 	}
-	fmt.Printf("\n:%d/%d\n", success , len(conf.ProcCfgs));
+	fmt.Printf("create cfg:%d/%d\n", success , len(conf.ProcCfgs));
 }
 
 
@@ -483,7 +517,7 @@ func create_cfg(pcfg *ProcCfg) int {
 	} else {
 		proc_map[pcfg.Name].cfg_file = cfg_real;
 	}
-	fmt.Printf("create %s success!\n", cfg_real);
+	v_print("create %s success!\n", cfg_real);
 	return 0;
 }
 
