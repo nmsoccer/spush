@@ -23,7 +23,7 @@ A Simple Push tool,一款简单的分发工具.主要目的是将不同的文件
 ### 命令选项
   * `-C`: 仅仅为分发任务生成各分发任务自有的配置文件(如果有设置)
   * `-P`: 推送并执行配置里所有定义的分发任务。这里会先执行-C选项的内容
-  * `-p xxx`: 根据任务名选择执行配置里某些分发任务
+  * `-p xxx`: 根据任务名选择执行配置里某些分发任务,符合一般的go正则规范即可
   * `-f conf_path`: 指定配置文件位置  
   * `-r`: 部署成功之后在部署机器的目标目录留下部署的痕迹，包括使用的工具及相关文件,默认删除
   * `-v`: 详细打印执行过程 默认关闭
@@ -188,6 +188,23 @@ A Simple Push tool,一款简单的分发工具.主要目的是将不同的文件
   [good night]
   report finish!
   deploy finish
+  ```
+  
+  * 选择推送 只选择推送cpy2,cpy3,cpy4:
+  ```
+  ./spush -f demo/simple_copy.json -p "cpy[2-4]"
+
+  ++++++++++++++++++++spush (2020-03-20 21:05:39)++++++++++++++++++++
+  push some procs:cpy[2-4]
+  matched procs num:3
+  create cfg:0/0
+  ----------Push <simple_copy> Result---------- 
+  ok
+  [3/3]
+  [cpy2]::success 
+  [cpy3]::success 
+  [cpy4]::success 
+  
   ```
   
 ### 进阶配置
@@ -401,3 +418,19 @@ procs选项在上面已经说过了，这里重点介绍proc_cfgs选项：
 
     ```
     其中db_serv.cfg保持了配置的目录结构，符合预期
+    
+  * 选择推送 选择推送logic_serv
+  ```
+  /spush -f demo/simple_game.json -p "logic*"
+
+  ++++++++++++++++++++spush (2020-03-20 21:08:10)++++++++++++++++++++
+  push some procs:logic*
+  matched procs num:2
+  create cfg:7/7
+  ...
+  ----------Push <simple_game> Result---------- 
+  ok
+  [2/2]
+  [logic_serv-1]::success 
+  [logic_serv-2]::success 
+  ```
