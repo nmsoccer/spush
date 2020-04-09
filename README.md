@@ -229,7 +229,7 @@ A Simple Push tool,一款简单的分发工具.主要目的是将不同的文件
 
   "proc_cfgs":[
     {"name":"conn_serv-1" ,  "cfg_name":"conf/conn_serv.cfg" , "cfg_tmpl":"./tmpl/conn_serv.tmpl" , "tmpl_param":"id=1001,ip=x.x.x.x,port=10280,name=conn_serv-1"},
-    {"name":"conn_serv-2" ,  "cfg_name":"conf.conn_serv.cfg" , "cfg_tmpl":"./tmpl/conn_serv.tmpl", "tmpl_param":"id=1002,ip=x.x.x.x,port=10280,name=conn_serv-2"},
+    {"name":"conn_serv-2" ,  "cfg_name":"conf/conn_serv.cfg" , "cfg_tmpl":"./tmpl/conn_serv.tmpl", "tmpl_param":"id=1002,ip=x.x.x.x,port=10280,name=conn_serv-2"},
     {"name":"logic_serv-1" , "cfg_name":"logic_serv.cfg" , "cfg_tmpl":"./tmpl/logic_serv.tmpl" , "tmpl_param":"id=2001,name=logic_serv-1"},
 	{"name":"logic_serv-2" , "cfg_name":"logic_serv.cfg" , "cfg_tmpl":"./tmpl/logic_serv.tmpl" , "tmpl_param":"id=2002,name=logic_serv-2"},
 	{"name":"db_serv-1" ,    "cfg_name":"conf/db/db_serv.cfg" ,    "cfg_tmpl":"./tmpl/db_serv.tmpl" , "tmpl_param":"id=3001"},
