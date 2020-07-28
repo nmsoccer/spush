@@ -27,6 +27,9 @@ A Simple Push tool,一款简单的分发工具.主要目的是将不同的文件
   * `-f conf_path`: 指定配置文件位置  
   * `-r`: 部署成功之后在部署机器的目标目录留下部署的痕迹，包括使用的工具及相关文件,默认删除
   * `-v`: 详细打印执行过程 默认关闭
+  * `-O`: 只推送配置  
+  * `-o`: 只推送bin
+  * PS:-o -O 选项可以同时为空，表示默认推送bin及对应配置；否则只能一个选项为真  
   
 ### 基本配置
 简单的配置文件参见demo/simple_copy/simple_copy.json，如下所示：   
@@ -38,8 +41,8 @@ A Simple Push tool,一款简单的分发工具.主要目的是将不同的文件
  "remote_user":"" ,
  "remote_pass":"" ,
  "procs":[
-   {"name":"cpy1" , "bin":["/etc/profile.d/" , "./init.sh"] , "host":"" , "host_dir":"/home/nmsoccer/spush_demo/simple_copy/cpy1" , "copy_cfg":0 , "cmd":""} , 
-   {"name":"cpy2" , "bin":["/etc/passwd" , "./count.sh"] , "host":"127.0.0.1" , "host_dir":"/home/nmsoccer/spush_demo/simple_copy/cpy2" , "copy_cfg":0 , "cmd":"./count.sh cs suomei"},
+   {"name":"cpy1" , "bin":["/etc/profile.d/" , "./init.sh"] , "host":"" , "host_dir":"/home/nmsoccer/spush_demo/simple_copy/cpy1" , "cmd":""} , 
+   {"name":"cpy2" , "bin":["/etc/passwd" , "./count.sh"] , "host":"127.0.0.1" , "host_dir":"/home/nmsoccer/spush_demo/simple_copy/cpy2" , "cmd":"./count.sh cs suomei"},
    {"name":"cpy3" , "bin":["/etc/passwd"] , "host":"" , "host_dir":"/home/nmsoccer/spush_demo/simple_copy/misc/" }, 
    {"name":"cpy4" , "bin":["./count.sh"] , "host":"" , "host_dir":"/home/nmsoccer/spush_demo/simple_copy/misc/"}
   ] ,
@@ -60,8 +63,7 @@ A Simple Push tool,一款简单的分发工具.主要目的是将不同的文件
   * 【name】: **必须**：分发任务的名字，在每个配置文件中必须唯一
   * 【bin】: **必须**：复制的源文件及目录，多个需要用','分割。注意不能使用\*等正则符，路径里的~符号也不能解析为家目录
   * 【host】: **可选**：目标主机的IP地址，如果本机部署则可以不填或者为127.0.0.1 
-  * 【host_dir】:**必须**：部署到目标机器上的目录，需要填写绝对路径
-  * 【copy_cfg】: **可选**：是否需要拷贝由下面proc_cfg里生成的配置文件，0：不拷贝;1:拷贝。如果proc_cfg里没有填写也不会拷贝到 
+  * 【host_dir】:**必须**：部署到目标机器上的目录，需要填写绝对路径   
   * 【cmd】: **可选**：在该分发任务部署成功之后可以选择执行的命令。注意该命令的执行目录是在host_dir目录。比如设置./xx.sh则执行的是host_dir/xx.sh
   
 * 【proc_cfgs】: **可选**：对填写的每个分发任务生成对应配置文件，普通的拷贝工作可以不使用该选项
@@ -218,13 +220,13 @@ A Simple Push tool,一款简单的分发工具.主要目的是将不同的文件
   "remote_pass":"****" ,
   
     "procs":[
-    {"name":"conn_serv-1" , "bin":["./bin/conn_serv/conn_serv"] , "host":"127.0.0.1" , "host_dir":"/home/nmsoccer/sg/conn_serv" , "copy_cfg":1 , "cmd":"./conn_serv -D"},
-    {"name":"conn_serv-2" , "bin":["./bin/conn_serv/conn_serv"] , "host":"10.161.37.104" , "host_dir":"/home/nmsoccer/sg/conn_serv" , "copy_cfg":1 , "cmd":"./conn_serv -D"},
-	{"name":"logic_serv-1" , "bin":["./bin/logic_serv/logic_serv"] , "host":"127.0.0.1" , "host_dir":"/home/nmsoccer/sg/logic_serv" , "copy_cfg":1 , "cmd":"./logic_serv -D"},    
-    {"name":"logic_serv-2" , "bin":["./bin/logic_serv/logic_serv"] , "host":"10.161.37.104" , "host_dir":"/home/nmsoccer/sg/logic_serv" , "copy_cfg":1 , "cmd":"./logic_serv -D"},
-    {"name":"db_serv-1" ,   "bin":["./bin/db_serv/db_serv"] , "host":"10.144.172.215" , "host_dir":"/home/nmsoccer/sg/db_serv-1" , "copy_cfg":1 , "cmd":"./db_serv"},
-    {"name":"db_serv-2" ,   "bin":["./bin/db_serv/db_serv"] , "host":"10.144.172.215" , "host_dir":"/home/nmsoccer/sg/db_serv-2" , "copy_cfg":1 , "cmd":"./db_serv"},
-    {"name":"db_serv-3" ,   "bin":["./bin/db_serv/db_serv"] , "host":"10.144.172.215" , "host_dir":"/home/nmsoccer/sg/db_serv-3" , "copy_cfg":1 , "cmd":"./db_serv"}	
+    {"name":"conn_serv-1" , "bin":["./bin/conn_serv/conn_serv"] , "host":"127.0.0.1" , "host_dir":"/home/nmsoccer/sg/conn_serv" , "cmd":"./conn_serv -D"},
+    {"name":"conn_serv-2" , "bin":["./bin/conn_serv/conn_serv"] , "host":"10.161.37.104" , "host_dir":"/home/nmsoccer/sg/conn_serv" ,  "cmd":"./conn_serv -D"},
+	{"name":"logic_serv-1" , "bin":["./bin/logic_serv/logic_serv"] , "host":"127.0.0.1" , "host_dir":"/home/nmsoccer/sg/logic_serv" , "cmd":"./logic_serv -D"},    
+    {"name":"logic_serv-2" , "bin":["./bin/logic_serv/logic_serv"] , "host":"10.161.37.104" , "host_dir":"/home/nmsoccer/sg/logic_serv" , "cmd":"./logic_serv -D"},
+    {"name":"db_serv-1" ,   "bin":["./bin/db_serv/db_serv"] , "host":"10.144.172.215" , "host_dir":"/home/nmsoccer/sg/db_serv-1" , "cmd":"./db_serv"},
+    {"name":"db_serv-2" ,   "bin":["./bin/db_serv/db_serv"] , "host":"10.144.172.215" , "host_dir":"/home/nmsoccer/sg/db_serv-2" , "cmd":"./db_serv"},
+    {"name":"db_serv-3" ,   "bin":["./bin/db_serv/db_serv"] , "host":"10.144.172.215" , "host_dir":"/home/nmsoccer/sg/db_serv-3" ,  "cmd":"./db_serv"}	
   ],
 
   "proc_cfgs":[
