@@ -6,13 +6,13 @@
   "remote_pass":"****" ,
   
   "procs":[
-    {"name":"conn_serv-1" , "bin":["./bin/conn_serv/conn_serv"] , "host":"127.0.0.1" , "host_dir":"/home/nmsoccer/sg/conn_serv" , "copy_cfg":1 , "cmd":"./conn_serv -D"},
-    {"name":"conn_serv-2" , "bin":["./bin/conn_serv/conn_serv"] , "host":"10.161.37.104" , "host_dir":"/home/nmsoccer/sg/conn_serv" , "copy_cfg":1 , "cmd":"./conn_serv -D"},
-	{"name":"logic_serv-1" , "bin":["./bin/logic_serv/logic_serv"] , "host":"127.0.0.1" , "host_dir":"/home/nmsoccer/sg/logic_serv" , "copy_cfg":1 , "cmd":"./logic_serv -D"},    
-    {"name":"logic_serv-2" , "bin":["./bin/logic_serv/logic_serv"] , "host":"10.161.37.104" , "host_dir":"/home/nmsoccer/sg/logic_serv" , "copy_cfg":1 , "cmd":"./logic_serv -D"},
-    {"name":"db_serv-1" ,   "bin":["./bin/db_serv/db_serv"] , "host":"10.144.172.215" , "host_dir":"/home/nmsoccer/sg/db_serv-1" , "copy_cfg":1 , "cmd":"./db_serv"},
-    {"name":"db_serv-2" ,   "bin":["./bin/db_serv/db_serv"] , "host":"10.144.172.215" , "host_dir":"/home/nmsoccer/sg/db_serv-2" , "copy_cfg":1 , "cmd":"./db_serv"},
-    {"name":"db_serv-3" ,   "bin":["./bin/db_serv/db_serv"] , "host":"10.144.172.215" , "host_dir":"/home/nmsoccer/sg/db_serv-3" , "copy_cfg":1 , "cmd":"./db_serv"}	
+    {"name":"conn_serv-1" , "bin":["./bin/conn_serv/conn_serv"] , "host":"127.0.0.1" , "host_dir":"/home/nmsoccer/sg/conn_serv" , "cmd":"./conn_serv -D"},
+    {"name":"conn_serv-2" , "bin":["./bin/conn_serv/conn_serv"] , "host":"10.161.37.104" , "host_dir":"/home/nmsoccer/sg/conn_serv" , "cmd":"./conn_serv -D"},
+	{"name":"logic_serv-1" , "bin":["./bin/logic_serv/logic_serv"] , "host":"127.0.0.1" , "host_dir":"/home/nmsoccer/sg/logic_serv" , "cmd":"./logic_serv -D"},    
+    {"name":"logic_serv-2" , "bin":["./bin/logic_serv/logic_serv"] , "host":"10.161.37.104" , "host_dir":"/home/nmsoccer/sg/logic_serv" , "cmd":"./logic_serv -D"},
+    {"name":"db_serv-1" ,   "bin":["./bin/db_serv/db_serv"] , "host":"10.144.172.215" , "host_dir":"/home/nmsoccer/sg/db_serv-1" , "cmd":"./db_serv"},
+    {"name":"db_serv-2" ,   "bin":["./bin/db_serv/db_serv"] , "host":"10.144.172.215" , "host_dir":"/home/nmsoccer/sg/db_serv-2" , "cmd":"./db_serv"},
+    {"name":"db_serv-3" ,   "bin":["./bin/db_serv/db_serv"] , "host":"10.144.172.215" , "host_dir":"/home/nmsoccer/sg/db_serv-3" , "cmd":"./db_serv"}	
   ],
 
   "proc_cfgs":[

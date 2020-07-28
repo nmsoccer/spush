@@ -36,14 +36,15 @@ var CreateCfg = flag.Bool("C", false , "just create cfg");
 var Verbose = flag.Bool("v", false , "verbose");
 var SConfFile = flag.String("f", "", "spec conf file,default using ./conf.json");
 var RemainFootPrint = flag.Bool("r", false, "remain footprint at every deployed dir");
-
+var OnlyCfg = flag.Bool("O" , false , "only push cfg")
+var OnlyBin = flag.Bool("o" , false , "only push bin");
 
 type Proc struct {
 	Name string 
 	Bin []string  	
 	Host string 
 	HostDir string `json:"host_dir"`
-	CopyCfg int `json:"copy_cfg"`
+	//CopyCfg int `json:"copy_cfg"`
 	Cmd string `json:"cmd"`
 }
 
@@ -116,6 +117,13 @@ func main() {
 	if *SConfFile != "" && len(*SConfFile)>0 {
 		ConfFile = *SConfFile;
 	}
+
+	if *OnlyCfg && *OnlyBin {
+		flag.PrintDefaults();
+		fmt.Printf("-o and -O only one option allowed! if both false , default push both!\n");
+		return;
+	}
+
 	
 	//open conf
 	file , err := os.Open(ConfFile);
@@ -213,8 +221,7 @@ func main() {
 		mproc = new(MProc);
 		mproc.proc = proc;		
 		proc_map[proc.Name] = mproc;
-		v_print("proc:%s bin:%v host:%s host_dir:%s copy_cfg:%d\n", proc.Name , mproc.proc.Bin , mproc.proc.Host , mproc.proc.HostDir , 
-			mproc.proc.CopyCfg);		
+		v_print("proc:%s bin:%v host:%s host_dir:%s\n", proc.Name , mproc.proc.Bin , mproc.proc.Host , mproc.proc.HostDir);
 	}
 	v_print("proc_map:%v\n", proc_map);
 		
@@ -344,34 +351,43 @@ func push_procs(procs [] *Proc) {
 
 func gen_pkg(pproc *Proc) int {
 	var _func_ = "<gen_pkg>";
-		
+
 	//pkg-dir
 	//curr_time := time.Now();
 	var pkg_dir = ""
 	pkg_dir = fmt.Sprintf("./pkg/%s/%s/" , conf.TaskName , pproc.Name);
 	//pkg_dir = fmt.Sprintf("./pkg/%s/%d-%02d-%02d/" , pproc.Name , curr_time.Year() , int(curr_time.Month()) , curr_time.Day());
 	//fmt.Println(pkg_dir);
-	
+
 	//rm exist dir
 	err := os.RemoveAll(pkg_dir);
 	if err != nil {
 		fmt.Printf("%s remove old dir:%s failed! err:%s\n", _func_ , pkg_dir , err);
 		return -1;
 	}
-	
+
 	//create dir
 	err = os.MkdirAll(pkg_dir , 0766);
 	if err != nil {
 		fmt.Printf("%s create dir %s failed! err:%s\n", _func_ , pkg_dir , err);
 		return -1;
 	}
-	
-	//copy files	
+
+	//copy files
 	cp_arg := []string{"-Rf"};
-	cp_arg = append(cp_arg, pproc.Bin...);
-	if pproc.CopyCfg == 1 {		//copy cfg
-		cp_arg = append(cp_arg , proc_map[pproc.Name].cfg_file);
-	}	
+
+	if *OnlyBin { //only bin files
+		cp_arg = append(cp_arg, pproc.Bin...);
+	} else if *OnlyCfg { //only cfg
+		cp_arg = append(cp_arg, proc_map[pproc.Name].cfg_file);
+	} else { //both
+		cp_arg = append(cp_arg, pproc.Bin...);
+		if proc_map[pproc.Name].cfg_file != "" { //copy cfg
+			cp_arg = append(cp_arg, proc_map[pproc.Name].cfg_file);
+		}
+	}
+
+
 	cp_arg = append(cp_arg , pkg_dir);
 	v_print("exe cp %v\n" , cp_arg);
 		
